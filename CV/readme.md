@@ -20,12 +20,9 @@
 CV
 ├── config.py              # 설정 관리
 ├── data.py                # 데이터 다운로드 및 데이터 로드
-├── models/
-│   ├── resnet50.py        
-│   ├── vit.py            
+├── resnet50.py            # ResNet50 Model Architecture           
 ├── metrics.py             # 평가 지표 코드
 ├── train_eval.py          # 학습 및 평가 코드
-├── experiments.py         # 실험 관리 및 실행 
 ├── main.py                # 실행 스크립트
 └── results/
     ├── tables/            # 실험 결과 테이블 저장
