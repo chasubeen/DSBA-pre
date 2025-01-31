@@ -80,12 +80,12 @@ class ResNet50(nn.Module):
     def __init__(self, num_classes = 10):
         super().__init__()
 
-        self.current_channels = 64  # 초기 입력 채널
+        self.in_channels = 64  # 초기 입력 채널
 
         ## conv1
         # 7x7 Convolution + BatchNorm + ReLU
-        self.conv1 = nn.Conv2d(3, self.current_channels, kernel_size = 7, stride = 2, padding = 3, bias = False)
-        self.bn1 = nn.BatchNorm2d(self.current_channels)
+        self.conv1 = nn.Conv2d(3, self.in_channels, kernel_size = 7, stride = 2, padding = 3, bias = False)
+        self.bn1 = nn.BatchNorm2d(self.in_channels)
         self.relu = nn.ReLU(inplace = True)
 
         ## conv2
@@ -107,7 +107,7 @@ class ResNet50(nn.Module):
 
         ## Output layer
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.fc = nn.Linear(self.current_channels, num_classes)
+        self.fc = nn.Linear(512 * BottleNeck.expansion, num_classes)
 
 
     ## ResNet의 각 Stage를 구성하는 블록을 생성하는 함수     
@@ -116,13 +116,13 @@ class ResNet50(nn.Module):
 
         # 첫 번째 블록에서는 downsampling 적용
         # identity mapping 시 feature map의 형태를 맞춰주기 위함
-        layers.append(block(self.current_channels, out_channels, stride, downsample = True))
+        layers.append(block(self.in_channels, out_channels, stride, downsample = True))
         # 채널 업데이트
-        self.current_channels = out_channels * block.expansion  
+        self.in_channels = out_channels * block.expansion
 
         # 나머지 블록들은 downsampling 없이 추가
         for _ in range(1, num_blocks):
-            layers.append(block(self.current_channels, out_channels))
+            layers.append(block(self.in_channels, out_channels))
 
         return nn.Sequential(*layers)
 
