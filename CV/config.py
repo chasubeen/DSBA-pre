@@ -7,8 +7,13 @@ cfg = OmegaConf.create({
     "data": {
         "download_url": "https://drive.google.com/drive/folders/1wEnwMeJoQZwJhI7oBRah3I8QX-FpLMYD",
         "data_dir": "./data",
-        "batch_size": 512,
-        "num_workers": 4
+        "batch_size": 64,
+        "num_workers": 4,
+        "image_size": (224, 224),  
+        "normalize": {  
+            "mean": [0.5, 0.5, 0.5],
+            "std": [0.5, 0.5, 0.5]
+        }
     },
 
     ## 모델 설정
@@ -29,14 +34,14 @@ cfg = OmegaConf.create({
 
     ## 실험 설정
     "experiment": {
-        "results_dir": "./results",  # 실험 결과 저장 경로
-        "log_file": "experiment_results.txt",  # 로그 저장 파일
-        "save_model": True,  # 모델 저장 여부
-        "experiments": [  # 수행할 실험 목록
-            {"model": "ResNet50", "pretrained": False},
-            {"model": "ViT-S/16", "pretrained": False},
-            {"model": "ResNet50", "pretrained": True},
-            {"model": "ViT-S/16", "pretrained": True}
+        "results_dir": "./results",
+        "log_file": "experiment_results.txt",
+        "save_model": True,
+        "experiments": [
+            {"model": "ResNet50", "model_type": "resnet", "pretrained": False},
+            {"model": "ViT-S/16", "model_type": "vit", "pretrained": False},
+            {"model": "ResNet50", "model_type": "resnet", "pretrained": True},
+            {"model": "ViT-S/16", "model_type": "vit", "pretrained": True}
         ]
     }
 })
