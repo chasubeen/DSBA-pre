@@ -40,9 +40,9 @@ cfg = OmegaConf.create({
         "save_model": True,
         "experiments": [
             {"model": "ResNet50", "model_type": "resnet", "pretrained": False},
-            {"model": "ViT-S/16", "model_type": "vit", "pretrained": False},
+            {"model": "ViT-S", "model_type": "vit", "pretrained": False},
             {"model": "ResNet50", "model_type": "resnet", "pretrained": True},
-            {"model": "ViT-S/16", "model_type": "vit", "pretrained": True}
+            {"model": "ViT-S", "model_type": "vit", "pretrained": True}
         ]
     }
 })
