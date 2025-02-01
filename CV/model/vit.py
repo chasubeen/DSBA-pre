@@ -26,4 +26,4 @@ class ViT_S16(nn.Module):
     def forward(self, x):
         h = self.model(x)  # Feature Vector 추출
         x = self.fc(h)  # 최종 Classification 수행
-        return x, h  # ResNet과 동일한 출력 구조
+        return x

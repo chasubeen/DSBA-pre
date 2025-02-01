@@ -151,4 +151,4 @@ class ResNet50(nn.Module):
         h = x.view(x.shape[0], -1)  # flatten
         x = self.fc(h)
 
-        return x, h  # feature Vector도 함께 반환
+        return x
