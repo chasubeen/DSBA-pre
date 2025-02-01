@@ -10,11 +10,16 @@ def trainer(model, dataloader, loss, optimizer, device):
 
     total_loss, total_acc = 0.0, 0.0
 
-    for x, y in tqdm(dataloader, desc = "Training", leave = False):
-        x, y = x.to(device), y.to(device)
+    for batch in tqdm(dataloader, desc = "Training", leave = False):
+        # ViT 데이터 처리
+        if isinstance(batch, dict):  
+            x, y = batch["pixel_values"].to(device), batch["labels"].to(device)
+        # ResNet 데이터 처리
+        else:                        
+            x, y = batch[0].to(device), batch[1].to(device)
 
         ## Forward Pass 
-        y_est, _ = model(x)  # Feature Vector 제외하고 출력만 사용
+        y_est = model(x)  # Feature Vector 제외하고 출력만 사용
         cost = loss(y_est, y)
 
         total_loss += cost.item()
@@ -40,11 +45,16 @@ def evaluator(model, dataloader, loss, device):
     total_top_k_error, total_precision, total_recall, total_f1 = 0.0, 0.0, 0.0, 0.0
 
     with torch.no_grad():
-        for x, y in tqdm(dataloader, desc = "Evaluating", leave = False):
-            x, y = x.to(device), y.to(device)
+        for batch in tqdm(dataloader, desc = "Evaluating", leave = False):
+            # ViT 데이터 처리
+            if isinstance(batch, dict):  
+                x, y = batch["pixel_values"].to(device), batch["labels"].to(device)
+            # ResNet 데이터 처리
+            else:                        
+                x, y = batch[0].to(device), batch[1].to(device)
 
             ## Forward Pass
-            y_est, _ = model(x)
+            y_est = model(x)
             cost = loss(y_est, y)
 
             total_loss += cost.item()
