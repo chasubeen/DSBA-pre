@@ -10,11 +10,11 @@ def trainer(model, dataloader, loss, optimizer, device):
 
     total_loss, total_acc = 0.0, 0.0
 
-    for x, y in tqdm(dataloader, desc  ="Training", leave = False):
+    for x, y in tqdm(dataloader, desc = "Training", leave = False):
         x, y = x.to(device), y.to(device)
 
         ## Forward Pass 
-        y_est = model(x)  # Feature Vector 제외하고 출력만 사용
+        y_est, _ = model(x)  # Feature Vector 제외하고 출력만 사용
         cost = loss(y_est, y)
 
         total_loss += cost.item()
@@ -44,7 +44,7 @@ def evaluator(model, dataloader, loss, device):
             x, y = x.to(device), y.to(device)
 
             ## Forward Pass
-            y_est = model(x)
+            y_est, _ = model(x)
             cost = loss(y_est, y)
 
             total_loss += cost.item()
