@@ -8,7 +8,6 @@ from data import train_loader, test_loader, train_dataset, test_dataset
 from model.resnet50 import ResNet50
 import timm
 from train_eval import trainer, evaluator
-# from metrics import accuracy, top_k_error, precision, recall, f1
 
 
 
@@ -36,7 +35,7 @@ def get_scheduler(optimizer, total_epochs, warmup_epochs):
             return (epoch + 1) / warmup_epochs  # linear warmup
         else:
             # cosine annealing Scheduler
-            return 0.5 * (1 + torch.cos(torch.tensor((epoch - warmup_epochs) / (total_epochs - warmup_epochs) * 3.141592653589793)))
+            return 0.5 * (1 + torch.cos(torch.tensor((epoch - warmup_epochs) / (total_epochs - warmup_epochs) * torch.pi)))
     return optim.lr_scheduler.LambdaLR(optimizer, lr_lambda)
 
 
@@ -46,42 +45,38 @@ with open(log_path, "w") as f:
     for exp in experiments:
         model_name, model_type, pretrained = exp["model"], exp["model_type"], exp["pretrained"]
 
-        print(f"\n=== Running Experiment: {model_name}(Pretrained: {pretrained}) ===")
-        f.write(f"\n=== Running Experiment: {model_name}(Pretrained: {pretrained}) ===\n")
+        print(f"\n=== Running Experiment: {model_name} (Pretrained: {pretrained}) ===")
+        f.write(f"\n=== Running Experiment: {model_name} (Pretrained: {pretrained}) ===\n")
 
 
-        ## 모델 선택
-        # 모델 타입 설정(ResNet50 or ViT-S/16)
+        ## 모델 타입 설정(ResNet50 or ViT-S/16)
         train_dataset.set_model_type(model_type)
         test_dataset.set_model_type(model_type)
 
+
+        ## 모델 선택
         if model_name == "ResNet50":
-            # 모델 객체 생성
-            model = ResNet50(num_classes = 10).to(device)
-            # wehight 적용
+            # 필요한 경우 일단 pre-trained weight을 받기 위해 ImageNet-1k에 맞춰 설정
+            model = ResNet50(num_classes = 1000).to(device)
             if pretrained:
                 print("🔹 Applying Pre-trained Weights...")
                 pretrained_weights = torch.hub.load_state_dict_from_url(
-                    "https://download.pytorch.org/models/resnet50-19c8e357.pth", 
-                    map_location = device
+                    "https://download.pytorch.org/models/resnet50-19c8e357.pth"
                 )
                 model.load_state_dict(pretrained_weights, strict = False)
-                # FC Layer 수정 (1000 → 10 classes for CIFAR-10)
-                model.fc = nn.Linear(in_features = 2048, out_features = 10).to(device)
+            model.fc = nn.Linear(in_features = 2048, out_features = 10).to(device)
 
-        elif model_name == "ViT-S/16":
-            # 모델 객체 생성
-            model = timm.create_model("vit_small_patch16_224", pretrained = pretrained, num_classes = 10).to(device)
-            # wehight 적용
+        elif model_name == "ViT-S":
+            # 필요한 경우 일단 pre-trained weight을 받기 위해 ImageNet-1k에 맞춰 설정
+            model = timm.create_model("vit_small_patch16_224", pretrained = pretrained, num_classes = 1000).to(device)
             if pretrained:
                 print("🔹 Applying Pre-trained Weights...")
-                # FC Layer 수정 (1000 → 10 classes for CIFAR-10)
-                model.head = nn.Linear(in_features = model.head.in_features, out_features = 10).to(device)
+            model.head = nn.Linear(in_features = model.head.in_features, out_features = 10).to(device)
 
 
         ## 손실 함수, 옵티마이저, 스케쥴러 초기화
         criterion = loss_function()
-        optimizer = optimizer_class(model.parameters(), lr = initial_lr)
+        optimizer = optimizer_class(model.parameters(), lr=initial_lr)
         scheduler = get_scheduler(optimizer, epochs, warmup_epochs)
 
 
@@ -90,13 +85,11 @@ with open(log_path, "w") as f:
             print(f"Epoch {epoch + 1}/{epochs}")
             f.write(f"Epoch {epoch + 1}/{epochs}\n")
 
-            # 학습
             train_loss, train_acc = trainer(model, train_loader, criterion, optimizer, device)
             log_msg = f"  Train Loss: {train_loss:.4f}, Train Accuracy: {train_acc * 100:.2f}%"
             print(log_msg)
             f.write(log_msg + "\n")
 
-            # 평가
             test_metrics = evaluator(model, test_loader, criterion, device)
             eval_results = {
                 "Test Loss": test_metrics["loss"],
@@ -111,13 +104,13 @@ with open(log_path, "w") as f:
             print(log_msg)
             f.write(log_msg + "\n")
 
-            # Learning Rate Scheduler 업데이트
             scheduler.step()
+
 
         ## 모델 저장
         save_filename = f"{model_name.lower()}_{'pretrained' if pretrained else 'scratch'}.pth"
         save_path = os.path.join(cfg.model.save_dir, save_filename)
-        os.makedirs(cfg.model.save_dir, exist_ok=True)
+        os.makedirs(cfg.model.save_dir, exist_ok = True)
         torch.save(model.state_dict(), save_path)
 
         log_msg = f"✅ 모델 저장 완료: {save_path}"
