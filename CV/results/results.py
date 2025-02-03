@@ -91,7 +91,7 @@ def create_figures(df, original_df):
     FIGURES_DIR = os.path.join(RESULTS_DIR, "figures")
     os.makedirs(FIGURES_DIR, exist_ok=True)
 
-    ## === Loss 시각화 ===
+    ## Loss
     fig, axs = plt.subplots(1, 2, figsize=(15, 6), sharey=True)
 
     for (model, pretrained), group in original_df.groupby(["Model", "Pretrained"]):
@@ -113,36 +113,37 @@ def create_figures(df, original_df):
     plt.close()
 
 
-    ## === Metrics 시각화 ===
+    ## Metrics
     metrics = ["Accuracy", "Top-5 Error", "Precision", "Recall", "F1 Score"]
 
-    # Melt data for easier seaborn plotting
-    melted_df = pd.melt(df, id_vars=["Model", "Pretrained"], value_vars=metrics,
-                        var_name="Metric", value_name="Value")
+    # seaborn plotting을 위한 계층 구조 해제
+    melted_df = pd.melt(df, id_vars = ["Model", "Pretrained"], value_vars = metrics,
+                        var_name = "Metric", value_name = "Value")
 
-    # ✅ Extract numeric mean values
+    # 시각화 시에는 평균값만 표기
     melted_df["Mean"] = melted_df["Value"].apply(lambda x: float(x.split("±")[0].strip()))
 
     # Grouped Bar Chart
     for metric in metrics:
-        plt.figure(figsize=(10, 6))
-        plot_data = melted_df[melted_df["Metric"] == metric].sort_values(by="Mean")
+        plt.figure(figsize = (10, 6))
+        plot_data = melted_df[melted_df["Metric"] == metric].sort_values(by = "Mean")
 
-        ax = sns.barplot(data=plot_data, 
-                         x="Model", y="Mean", hue="Pretrained", 
-                         palette="Set2", edgecolor="black", width=0.6)
+        ax = sns.barplot(data = plot_data, 
+                         x = "Model", y = "Mean", hue = "Pretrained", 
+                         palette = "Set2", edgecolor = "black", width = 0.6)
 
         # 평균값만 표시
         for p in ax.patches:
             ax.annotate(f'{p.get_height():.2f}', 
                         (p.get_x() + p.get_width() / 2., p.get_height()), 
-                        ha='center', va='bottom', fontsize=10)
+                        ha = 'center', va = 'bottom', fontsize = 10)
 
         plt.title(f"{metric}")
         plt.xlabel("Model")
         plt.ylabel(metric)
-        plt.legend(title="Pretrained", loc="upper center", bbox_to_anchor=(0.5, -0.1), ncol=2)
+        plt.legend(title = "Pretrained", loc = "upper center", bbox_to_anchor = (0.5, -0.1), ncol = 2)
         plt.tight_layout()
+
         plt.savefig(os.path.join(FIGURES_DIR, f"{metric.replace(' ', '_').lower()}.png"))
         plt.close()
 
@@ -155,11 +156,11 @@ def main():
 
     # 결과 테이블 저장
     table_path = os.path.join(RESULTS_DIR, "table.csv")
-    formatted_df.to_csv(table_path, index=False)
+    formatted_df.to_csv(table_path, index = False)
 
     # 성능 시각화
     create_figures(formatted_df, df)
-    print(f"✅ 결과 테이블과 그래프가 {RESULTS_DIR} 폴더에 저장되었습니다!")
+    print(f"결과 테이블과 그래프가 {RESULTS_DIR} 폴더에 저장되었습니다!")
 
 if __name__ == "__main__":
     main()
