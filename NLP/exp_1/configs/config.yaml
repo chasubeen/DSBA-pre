@@ -1,0 +1,61 @@
+## 데이터 설정
+data:
+  dataset_name: "stanfordnlp/imdb"
+  data_path: "./exp_1/data" # 데이터셋 캐싱 경로
+  batch_size:
+    train: 8
+    valid: 8
+    test: 4
+  max_len: 128
+  pin_memory: true  # CUDA에서 메모리 전송 최적화 여부
+
+## 학습 관련 설정
+train:
+  seed: 42
+  epochs: 5
+  learning_rate: 5e-5
+  optimizer: "adam"
+  scheduler: "constant"
+  weight_decay: 0.01  # Regularization 
+  warmup_steps: 0
+
+## Torch 관련 설정
+torch:
+  seed: 42
+  cudnn_deterministic: True
+  cudnn_benchmark: False
+  set_manual_seed: True
+  device: "cuda"
+
+## 모델 설정(BERT & ModernBERT)
+model:
+  model_name: "bert-base-uncased"  # 실험 시 변경 가능(ModernBERT 사용 시 "ModernBERT-base")
+  hidden_size: 768
+  num_labels: 2 # 0(부정), 1(긍정)
+  dropout_rate: 0.1
+
+## 로깅 설정
+logging:
+  use_wandb: True
+  log_interval: 100
+  log_file: "./exp_1/log/[imdb] {model_name}-train.log"  # 로그 파일 경로
+
+## W&B 설정
+wandb:
+  api_key_env: "WANDB_API_KEY"  # 실행 시 환경변수에서 로드
+  project: "dsba_pretrain_nlp_exp1"
+  experiment_name: "[imdb] {model_name}"  # 모델 이름 자동 적용
+  dir: "./exp_1"
+  config:
+    model: "{model_name}"
+    optimizer: "adam"
+    lr: 5e-5
+    batch_size: "{batch_size}"  # 배치 크기
+    epoch: 5
+    max_seq_length: 128
+
+## 기타 설정
+misc:
+  device: "cuda"  # "cuda" or "cpu"
+checkpoint:
+  checkpoint_dir: "./exp_1/checkpoints"
