@@ -1,0 +1,24 @@
+2025-02-16 23:40:48,671:INFO:Epoch 1/5 - Train Loss: 0.27326521617416294
+2025-02-16 23:40:48,672:INFO:Epoch 1/5 - Train Accuracy: 0.88485
+2025-02-16 23:41:33,801:INFO:Epoch 1/5 - Validation Loss: 0.22694538262486458
+2025-02-16 23:41:33,801:INFO:Epoch 1/5 - Validation Accuracy: 0.91
+2025-02-16 23:41:34,548:INFO:Model updated: Saved at ./exp_1/checkpoints/best_model_modernbert.pt
+2025-02-17 00:01:13,695:INFO:Epoch 2/5 - Train Loss: 0.1492216856262181
+2025-02-17 00:01:13,695:INFO:Epoch 2/5 - Train Accuracy: 0.94325
+2025-02-17 00:01:53,247:INFO:Epoch 2/5 - Validation Loss: 0.23571547997556627
+2025-02-17 00:01:53,248:INFO:Epoch 2/5 - Validation Accuracy: 0.9114
+2025-02-17 00:01:57,526:INFO:Model updated: Saved at ./exp_1/checkpoints/best_model_modernbert.pt
+2025-02-17 00:19:43,594:INFO:Epoch 3/5 - Train Loss: 0.06352585693034343
+2025-02-17 00:19:43,595:INFO:Epoch 3/5 - Train Accuracy: 0.977125
+2025-02-17 00:20:04,259:INFO:Epoch 3/5 - Validation Loss: 0.2783932296312414
+2025-02-17 00:20:04,259:INFO:Epoch 3/5 - Validation Accuracy: 0.9048
+2025-02-17 00:29:38,061:INFO:Epoch 4/5 - Train Loss: 0.03846176135836322
+2025-02-17 00:29:38,061:INFO:Epoch 4/5 - Train Accuracy: 0.986475
+2025-02-17 00:29:58,740:INFO:Epoch 4/5 - Validation Loss: 0.3435574863624759
+2025-02-17 00:29:58,740:INFO:Epoch 4/5 - Validation Accuracy: 0.8998
+2025-02-17 00:39:32,547:INFO:Epoch 5/5 - Train Loss: 0.0287884411364862
+2025-02-17 00:39:32,548:INFO:Epoch 5/5 - Train Accuracy: 0.989525
+2025-02-17 00:39:53,226:INFO:Epoch 5/5 - Validation Loss: 0.46812853988971037
+2025-02-17 00:39:53,227:INFO:Epoch 5/5 - Validation Accuracy: 0.901
+2025-02-17 00:40:17,284:INFO:Test Loss: 0.2195137944534421
+2025-02-17 00:40:17,284:INFO:Test Accuracy: 0.909

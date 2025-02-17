@@ -129,6 +129,7 @@ def main(configs: omegaconf.DictConfig):
 
         # Validation
         model.eval()
+        
         total_valid_loss, total_valid_accuracy = 0, 0
         
         with torch.no_grad():

@@ -35,8 +35,8 @@ class BERTForClassification(nn.Module):
                              attention_mask = attention_mask, 
                              token_type_ids = token_type_ids)
         
-        # 최종 representation 추출([CLS] 토큰 활용)
-        pooled_output = outputs.last_hidden_state[:, 0, :]
+        # 최종 representation 추출
+        pooled_output = torch.mean(outputs.last_hidden_state, dim = 1) # 수정
         
         # Dropout을 적용한 후 classification head에 입력하여 logit값 반환
         logits = self.classifier(self.dropout(pooled_output))
@@ -76,7 +76,7 @@ class ModernBERTForClassification(nn.Module):
                              attention_mask = attention_mask)
 
         # 최종 representation 추출([CLS] 토큰 활용)
-        pooled_output = outputs.last_hidden_state[:, 0, :]
+        pooled_output = torch.mean(outputs.last_hidden_state, dim = 1) # 수정
         
         # Dropout을 적용한 후 classification head에 입력하여 logit값 반환
         logits = self.classifier(self.dropout(pooled_output))
