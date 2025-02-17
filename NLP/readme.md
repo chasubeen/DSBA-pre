@@ -130,10 +130,15 @@ project/
 | 모델 | Train Accuracy | Validation Accuracy | Test Accuracy |
 | --- | --- | --- | --- |
 | **BERT-base-uncased** | 0.9713 | 0.8854 | 0.8804 |
-| **ModernBERT-base** |  |  |  |
+| **ModernBERT-base** | 0.9865 | 0.9114 | 0.909 |
 
 ⇒ ModernBERT가 약간 더 높은 성능을 보였음  
 ⇒ 기존 `[CLS]` 방식에서는 BERT 성능이 낮았으나, `torch.mean()` 적용 후 ModernBERT와 유사해짐
+
+![image](https://github.com/user-attachments/assets/fea241f0-094c-4c73-bb6c-74c32d7356a4)
+![image](https://github.com/user-attachments/assets/f49977b2-1ca8-4892-ad83-f0ae533742a5)
+
+- BERT(blue), ModernBERT(purple)
 
 ### **📝 결과 분석**
 
