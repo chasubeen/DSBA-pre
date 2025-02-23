@@ -1,0 +1,61 @@
+## 데이터 설정
+data:
+  dataset_name: "stanfordnlp/imdb"
+  data_path: "./exp_2/data" # 데이터셋 캐싱 경로
+  batch_size: 
+    train: 64 # 기본 배치 사이즈는 32로 고정
+    valid: 64
+    test: 64
+  max_len: 128
+  pin_memory: true  # CUDA에서 메모리 전송 최적화 여부
+  num_workers: 4
+
+## 학습 관련 설정
+train:
+  seed: 42
+  epochs: 5
+  accum_step: 1 # batch_size: [64 *1, 64*4, 64*16]
+  learning_rate: 5e-5
+  optimizer: "adam"
+  scheduler: "constant"
+
+## Torch 관련 설정
+torch:
+  seed: 42
+  cudnn_deterministic: True
+  cudnn_benchmark: False
+  set_manual_seed: True
+  device: "cuda"
+
+## 모델 설정(ModernBERT)
+model:
+  model_name: "bert-base-uncased"  # 실험 시 변경 가능(ModernBERT 사용 시 "ModernBERT-base")
+  hidden_size: 768
+  num_labels: 2 # 0(부정), 1(긍정)
+  dropout_rate: 0.1
+
+## 로깅 설정
+logging:
+  use_wandb: True
+  log_interval: 100
+  log_file: "./exp_2/log/[imdb] {model_name}_bs{effective_batch_size}.log"
+
+## W&B 설정
+wandb:
+  api_key_env: "WANDB_API_KEY"  # 실행 시 환경변수에서 로드
+  project: "dsba_pretrain_nlp_exp2_BERT"
+  experiment_name: "[imdb] {model_name}"  # 모델 이름 자동 적용
+  dir: "./exp_2"
+  config:
+    model: "{model_name}"
+    optimizer: "adam"
+    lr: 5e-5
+    batch_size: "{batch_size} * {accum_step}"  # gradient accumulation 고려한 실제 batch size
+    epoch: 5
+    max_seq_length: 128
+
+## 기타 설정
+misc:
+  device: "cuda"  # "cuda" or "cpu"
+checkpoint:
+  checkpoint_dir: "./exp_2/checkpoints"

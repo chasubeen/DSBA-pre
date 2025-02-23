@@ -1,0 +1,23 @@
+2025-02-20 05:59:54,840:INFO:Epoch 1/5 - Train Loss: 0.2606
+2025-02-20 05:59:54,841:INFO:Epoch 1/5 - Train Accuracy: 0.8881
+2025-02-20 06:00:12,541:INFO:Epoch 1/5 - Validation Loss: 0.2137
+2025-02-20 06:00:12,542:INFO:Epoch 1/5 - Validation Accuracy: 0.9185
+2025-02-20 06:00:16,813:INFO:Model updated: Saved at ./exp_2/checkpoints/modernbert_bs64.pt
+2025-02-20 06:07:31,319:INFO:Epoch 2/5 - Train Loss: 0.1336
+2025-02-20 06:07:31,321:INFO:Epoch 2/5 - Train Accuracy: 0.9494
+2025-02-20 06:07:48,487:INFO:Epoch 2/5 - Validation Loss: 0.2171
+2025-02-20 06:07:48,488:INFO:Epoch 2/5 - Validation Accuracy: 0.9124
+2025-02-20 06:15:04,758:INFO:Epoch 3/5 - Train Loss: 0.0528
+2025-02-20 06:15:04,760:INFO:Epoch 3/5 - Train Accuracy: 0.9819
+2025-02-20 06:15:21,959:INFO:Epoch 3/5 - Validation Loss: 0.2893
+2025-02-20 06:15:21,960:INFO:Epoch 3/5 - Validation Accuracy: 0.9074
+2025-02-20 06:22:39,141:INFO:Epoch 4/5 - Train Loss: 0.0286
+2025-02-20 06:22:39,145:INFO:Epoch 4/5 - Train Accuracy: 0.9901
+2025-02-20 06:22:56,381:INFO:Epoch 4/5 - Validation Loss: 0.3954
+2025-02-20 06:22:56,381:INFO:Epoch 4/5 - Validation Accuracy: 0.9080
+2025-02-20 06:30:14,467:INFO:Epoch 5/5 - Train Loss: 0.0175
+2025-02-20 06:30:14,470:INFO:Epoch 5/5 - Train Accuracy: 0.9942
+2025-02-20 06:30:31,704:INFO:Epoch 5/5 - Validation Loss: 0.3755
+2025-02-20 06:30:31,705:INFO:Epoch 5/5 - Validation Accuracy: 0.9126
+2025-02-20 06:30:49,378:INFO:Test Loss: 0.2086
+2025-02-20 06:30:49,378:INFO:Test Accuracy: 0.9203
