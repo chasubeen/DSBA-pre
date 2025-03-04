@@ -11,14 +11,19 @@ def load_config(config_path: str = "exp_2/configs/config.yaml") -> omegaconf.Dic
     """
     config.yaml 파일을 불러와서 OmegaConf 객체로 반환하는 함수
     """
+
+    # config.yaml 로드
     config = OmegaConf.load(config_path)
 
     # 환경변수에서 W&B API Key 불러오기
-    wandb_api_key = os.getenv(config.wandb.api_key_env, None)
+    wandb_api_key = os.getenv("WANDB_API_KEY", None)
     if wandb_api_key is None:
         raise ValueError("W&B API Key가 설정되지 않았습니다.")
-    else:
-        os.environ["WANDB_API_KEY"] = wandb_api_key  # W&B 실행을 위해 환경변수 설정
+    
+
+    # W&B API Key 환경변수 설정 (이제 config를 로드한 후 실행)
+    os.environ["WANDB_API_KEY"] = wandb_api_key
+
     return config
 
 
@@ -50,25 +55,21 @@ def set_logger(configs):
     """
     로깅 설정 함수 (effective_batch_size 적용)
     """
-    effective_batch_size = configs.data.batch_size.train * configs.train.accum_step
-
     log_file = configs.logging.log_file.format(
         model_name = configs.model.model_name,
-        effective_batch_size = effective_batch_size 
+        batch_size_train = configs.data.batch_size.train,  # 직접 전달
+        accum_step = configs.train.accum_step  # 직접 전달
     )
 
-    # 로그 디렉토리 생성
     log_dir = os.path.dirname(log_file)
     os.makedirs(log_dir, exist_ok=True)
 
-    # 로그 설정
     logging.basicConfig(
         filename=log_file,
         level=logging.INFO,
         format="%(asctime)s:%(levelname)s:%(message)s"
     )
 
-    # 콘솔 출력 추가
     console = logging.StreamHandler()
     console.setLevel(logging.INFO)
     formatter = logging.Formatter("%(asctime)s:%(levelname)s:%(message)s")
@@ -82,15 +83,22 @@ def wandb_logger(configs):
     """
     W&B 초기화
     """
-    if configs.logging.use_wandb:
-        effective_batch_size = configs.data.batch_size.train * configs.train.accum_step
-        
-        wandb.init(
-            project = configs.wandb.project,
-            name = configs.wandb.experiment_name.format(
-                model_name = configs.model.model_name,
-                batch_size = effective_batch_size
-            ),
-            config = OmegaConf.to_container(configs.wandb.config, resolve = True),
-            dir = configs.wandb.dir
-        )
+    experiment_name = configs.wandb.experiment_name.format(
+        model_name = configs.model.model_name,
+        batch_size_train = configs.data.batch_size.train,  
+        accum_step = configs.train.accum_step  
+    )
+
+    wandb.init(
+        project = configs.wandb.project,
+        name = experiment_name,
+        config = {
+            "model": configs.model.model_name,
+            "optimizer": configs.wandb.config.optimizer,
+            "lr": configs.wandb.config.lr,
+            "batch_size": configs.train.effective_batch_size,  
+            "epoch": configs.wandb.config.epoch,
+            "max_seq_length": configs.wandb.config.max_seq_length
+        },
+        dir = configs.wandb.dir
+    )
