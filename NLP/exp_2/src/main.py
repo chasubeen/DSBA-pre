@@ -1,6 +1,7 @@
 import wandb
 from tqdm import tqdm
 import os
+import time
 
 import torch
 import torch.nn
@@ -29,37 +30,33 @@ def get_scheduler(optimizer, scheduler_type = "constant"):
 
 # 평가 metric
 def calculate_accuracy(logits, label):
-    preds = logits.argmax(dim = -1)
+    preds = logits.argmax(dim=-1)
     correct = (preds == label).sum().item()
-    return correct / label.size(0)
+    total = label.size(0)
+    return correct, total
 
 def train_iter(model, inputs, optimizer, device, accum_step, step):
     inputs = {key: value.to(device) for key, value in inputs.items()}
     logits, loss = model(**inputs)
-
-    # Gradient Accumulation을 고려한 Loss Scaling
-    loss = loss / accum_step
-    loss.backward() # 그래디언트 누적
     
-    # Gradient Accumulation Step 단위로 Optimizer 업데이트
-    if (step + 1) % accum_step == 0 or (step + 1 == len(inputs)):  
+    loss = loss / accum_step
+    loss.backward()
+    
+    if (step + 1) % accum_step == 0 or (step + 1 == len(inputs)):
         optimizer.step()
-        optimizer.zero_grad()  
+        optimizer.zero_grad()
+    
+    correct, num_samples = calculate_accuracy(logits, inputs['label'])
+    
+    return loss.item() * num_samples, correct, num_samples
 
-    # Calculate accuracy
-    accuracy = calculate_accuracy(logits, inputs['label'])
-    wandb.log({'train_loss': loss.item(), 'train_accuracy': accuracy})
-    return loss, accuracy
-
-
-def valid_iter(model, inputs, device, log_samples=False):
+def valid_iter(model, inputs, device):
     inputs = {key: value.to(device) for key, value in inputs.items()}
     logits, loss = model(**inputs)
     
-    accuracy = calculate_accuracy(logits, inputs['label'])   
-    wandb.log({'val_loss': loss.item(), 'val_accuracy': accuracy})
+    correct, num_samples = calculate_accuracy(logits, inputs['label'])
     
-    return loss, accuracy
+    return loss.item() * num_samples, correct, num_samples
 
 # command line에서 모델 이름 받기
 def parse_args():
@@ -70,6 +67,7 @@ def parse_args():
     return parser.parse_args()
 
 def main(configs: omegaconf.DictConfig):
+
     ## Set device
     torch.manual_seed(configs.train.seed) # 실험 재현성을 위한 시드 고정
     torch.cuda.manual_seed(configs.train.seed)
@@ -110,70 +108,86 @@ def main(configs: omegaconf.DictConfig):
     for epoch in range(configs.train.epochs):
         # Train
         model.train()
-        total_train_loss, total_train_accuracy = 0, 0
+        total_train_loss, total_correct, total_samples = 0, 0, 0
         optimizer.zero_grad()
         
-        for step, batch in enumerate(tqdm(train_loader, desc=f"Epoch {epoch+1}/{configs.train.epochs}", ncols=100)):
-            train_loss, train_accuracy = train_iter(model, batch, optimizer, device, configs.train.accum_step, step)
+        for step, batch in enumerate(tqdm(train_loader, 
+                                     desc = f"Epoch {epoch+1}/{configs.train.epochs}", 
+                                     ncols = 100)):
+            train_loss, correct, num_samples = train_iter(model, batch, optimizer, device, configs.train.accum_step, step)
             total_train_loss += train_loss
-            total_train_accuracy += train_accuracy
+            total_correct += correct
+            total_samples += num_samples
+            
+            if step % 100 == 0:
+                wandb.log({'train_loss': total_train_loss / total_samples, 'train_accuracy': total_correct / total_samples})
         
-        avg_train_loss = total_train_loss / len(train_loader)
-        avg_train_accuracy = total_train_accuracy / len(train_loader)
+        avg_train_loss = total_train_loss / total_samples  
+        avg_train_accuracy = total_correct / total_samples
         
         logger.info(f"Epoch {epoch+1}/{configs.train.epochs} - Train Loss: {avg_train_loss:.4f}")
         logger.info(f"Epoch {epoch+1}/{configs.train.epochs} - Train Accuracy: {avg_train_accuracy:.4f}")
 
         # Validation
         model.eval()
-        total_valid_loss, total_valid_accuracy = 0, 0
+        total_valid_loss, total_correct, total_samples = 0, 0, 0
         
         with torch.no_grad():
             for batch in tqdm(valid_loader, 
-                              desc = f"Validating Epoch {epoch+1}", ncols = 100):
-                valid_loss, valid_accuracy = valid_iter(model, batch, device)
-                total_valid_loss += valid_loss.item()
-                total_valid_accuracy += valid_accuracy
-
-        avg_val_loss = total_valid_loss / len(valid_loader)
-        avg_val_accuracy = total_valid_accuracy / len(valid_loader)
-
+                              desc = f"Validating Epoch {epoch+1}", 
+                              ncols = 100):
+                valid_loss, correct, num_samples = valid_iter(model, batch, device)
+                total_valid_loss += valid_loss
+                total_correct += correct
+                total_samples += num_samples
+        
+        avg_val_loss = total_valid_loss / total_samples  
+        avg_val_accuracy = total_correct / total_samples
+        
         logger.info(f"Epoch {epoch+1}/{configs.train.epochs} - Validation Loss: {avg_val_loss:.4f}")
         logger.info(f"Epoch {epoch+1}/{configs.train.epochs} - Validation Accuracy: {avg_val_accuracy:.4f}")
         
+        wandb.log({'val_loss': avg_val_loss, 'val_accuracy': avg_val_accuracy})
+
         # 성능 개선 시 checkpoint 갱신
-        if total_valid_accuracy > best_valid_accuracy:
-            best_valid_accuracy = total_valid_accuracy            
-            torch.save(model.state_dict(), checkpoint_path)  
+        if avg_val_accuracy > best_valid_accuracy:
+            best_valid_accuracy = avg_val_accuracy
+            torch.save(model.state_dict(), checkpoint_path)
             logger.info(f"Model updated: Saved at {checkpoint_path}")
         
         # 스케쥴러 업데이트
         scheduler.step()
 
     ## Final test evaluation
-    model.load_state_dict(torch.load(checkpoint_path)) 
+    model.load_state_dict(torch.load(checkpoint_path))
     model.eval()
     
-    total_test_loss, total_test_accuracy = 0, 0
+    total_test_loss, total_correct, total_samples = 0, 0, 0
     with torch.no_grad():
-        for batch in tqdm(test_loader, desc="Testing", ncols=100):
-            test_loss, test_accuracy = valid_iter(model, batch, device)
-            total_test_loss += test_loss.item()
-            total_test_accuracy += test_accuracy
+        for batch in tqdm(test_loader, desc = "Testing", ncols = 100):
+            test_loss, correct, num_samples = valid_iter(model, batch, device)
+            total_test_loss += test_loss
+            total_correct += correct
+            total_samples += num_samples
     
-    avg_test_loss = total_test_loss / len(test_loader)
-    avg_test_accuracy = total_test_accuracy / len(test_loader)
-
+    avg_test_loss = total_test_loss / total_samples  
+    avg_test_accuracy = total_correct / total_samples
+    
     logger.info(f"Test Loss: {avg_test_loss:.4f}")
     logger.info(f"Test Accuracy: {avg_test_accuracy:.4f}")
+
 
 if __name__ == "__main__":
     args = parse_args()
     configs = load_config()
+    
     # model 갱신
     configs.model.model_name = get_model_name(args.model_name) if args.model_name.lower() not in map(str.lower, ["bert-base-uncased", "answerdotai/modernbert-base"]) else args.model_name
     # accum_step 갱신
     configs.train.accum_step = args.accum_step
-    print(f"model: {configs.model.model_name}, accum_step: {configs.train.accum_step}")
+    # effective batch size 계산
+    configs.train.effective_batch_size = configs.data.batch_size.train * configs.train.accum_step
+    
+    print(f"model: {configs.model.model_name}, accum_step: {configs.train.accum_step}, effective batch size: {configs.train.effective_batch_size}")
     
     main(configs)
