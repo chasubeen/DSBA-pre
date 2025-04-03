@@ -1,0 +1,10 @@
+DLinear:
+  moving_avg: 25
+  enc_in: 125 
+  dropout: 0.1
+  individual: false
+DLinear_RevIN:
+  moving_avg: 25
+  enc_in: 125 
+  dropout: 0.1
+  individual: false
